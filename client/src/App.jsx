@@ -4,6 +4,7 @@ import { Helmet, HelmetProvider  } from "react-helmet-async";
 
 function App() {
   axios.defaults.baseURL = "http://localhost:4000/"; //temporary
+  axios.defaults.withCredentials = true;
 
   return (
     <HelmetProvider>
