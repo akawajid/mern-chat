@@ -37,7 +37,9 @@ app.post("/register", async (req, res) => {
   await jwt.sign({ id: newUser._id }, jwtSecret, {}, (err, result) => {
     if (err) throw err;
 
-    res.status(201).json({ id: newUser._id });
+    const { _id } = newUser;
+
+    res.status(201).json({ _id, username });
   });
 });
 

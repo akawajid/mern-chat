@@ -1,9 +1,15 @@
 import axios from "axios";
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { Helmet, HelmetProvider } from "react-helmet-async";
+import { UserContext } from "../components/UserContext";
 
 export default function Register() {
   const [userData, setUserData] = useState({});
+  const { userProfile, setUserProfile } = useContext(UserContext);
+
+  if (userProfile.username) {
+    return <h1>You are already registered...</h1>;
+  }
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -19,7 +25,12 @@ export default function Register() {
 
     const response = await axios.post("/register", userData);
     console.log(response);
-    const { id } = response.data;
+    const { _id, username } = response.data;
+
+    setUserProfile({
+      _id,
+      username,
+    });
   };
 
   return (
