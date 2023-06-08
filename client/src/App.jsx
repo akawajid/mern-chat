@@ -1,17 +1,21 @@
-import Register from "./Register";
 import axios from "axios";
-import { Helmet, HelmetProvider  } from "react-helmet-async";
+import { useContext, useEffect } from "react";
+import { Helmet, HelmetProvider } from "react-helmet-async";
+import { UserContext } from "../components/UserContext";
+import Routes from "./Routes";
 
 function App() {
-  axios.defaults.baseURL = "http://localhost:4000/"; //temporary
+  axios.defaults.baseURL = import.meta.env.VITE_API_URL;
   axios.defaults.withCredentials = true;
+
+  const { userProfile } = useContext(UserContext);
 
   return (
     <HelmetProvider>
       <Helmet>
         <title>MERN Chat App</title>
       </Helmet>
-      <Register />;
+      <Routes />
     </HelmetProvider>
   );
 }
