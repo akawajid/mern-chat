@@ -73,30 +73,60 @@ app.get("/profile", (req, res) => {
     const user = jwt.verify(token, jwtSecret);
     res.send(user);
   } else {
-    res.status(401).send({});
+    res.send({});
+  }
+});
+
+app.get("/login", async (req, res) => {
+  const password = "1234";
+  const user = await User.findOne({ username: "test1" });
+
+  if (user) {
+    const { _id } = user;
+    bcryptjs
+      .compare(password, user.password)
+      .then((result) => {
+        jwt.sign({ _id, username }, jwtSecret, {}, (error, token) => {
+          res
+            .cookie("token", token, { sameSite: "none", secure: true })
+            .status("200")
+            .json({ _id, username });
+        });
+      })
+      .catch(() => {
+        res.status(401).json("Incorrect username or password");
+      });
+  } else {
+    res.status(401).json("Unauthorized");
   }
 });
 
 app.post("/login", async (req, res) => {
   const { username, password } = req.body;
-
-  const user = await User.findOne({
-    username,
-    password: await bcryptjs.hash(password, 10),
-  });
-
-  console.log(user);
+  const user = await User.findOne({ username });
 
   if (user) {
     const { _id } = user;
-    await jwt.sign({ _id, username }, jwtSecret, {}, (error, token) => {
-      if (error) throw error;
+    bcryptjs
+      .compare(password, user.password)
+      .then((result) => {
+        if (result !== true) throw new Error("Incorrect username or password");
 
-      res
-        .cookie("token", token, { sameSite: "none", secure: true })
-        .status(201)
-        .json({ _id, username });
-    });
+        return new Promise((resolve, reject) => {
+          jwt.sign({ _id, username }, jwtSecret, {}, (error, token) => {
+            if (token) resolve(token);
+            reject();
+          });
+        }).then((token) => {
+          res
+            .cookie("token", token, { sameSite: "none", secure: true })
+            .status(200)
+            .json({ _id, username });
+        });
+      })
+      .catch((error) => {
+        res.status(401).json(error?.message || "Unauthorized");
+      });
   } else {
     res.status(401).json("Unauthorized");
   }

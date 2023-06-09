@@ -1,14 +1,14 @@
 import axios from "axios";
 import { useContext, useState } from "react";
 import { Helmet, HelmetProvider } from "react-helmet-async";
-import { UserContext } from "../components/UserContext";
+import { UserContext } from "../../components/UserContext";
 
-export default function Register() {
+export default function Login() {
   const [userData, setUserData] = useState({});
   const { userProfile, setUserProfile } = useContext(UserContext);
 
   if (userProfile?.username) {
-    return <h1>You are already registered...</h1>;
+    return <h1>Welcome {userProfile.username}...</h1>;
   }
 
   const handleChange = (e) => {
@@ -23,7 +23,7 @@ export default function Register() {
     e.preventDefault();
 
     try {
-      const response = await axios.post("/register", userData);
+      const response = await axios.post("/login", userData);
       const { _id, username } = response.data;
 
       setUserProfile({
@@ -38,7 +38,7 @@ export default function Register() {
   return (
     <HelmetProvider>
       <Helmet>
-        <title>Register</title>
+        <title>Login</title>
       </Helmet>
       <div className="flex flex-col min-h-screen justify-center items-center bg-slate-300">
         <div className="w-1/4">
@@ -63,13 +63,14 @@ export default function Register() {
               type="submit"
               className="w-full p-2 text-white my-2 font-bold bg-blue-600"
             >
-              Register
+              Login
             </button>
           </form>
+
           <p className="my-2">
-            Already have account?{" "}
-            <a href="/login">
-              <b>Login Here</b>
+            Dont have account?{" "}
+            <a href="/register">
+              <b>Register Here</b>
             </a>{" "}
           </p>
         </div>
