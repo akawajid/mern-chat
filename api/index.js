@@ -5,6 +5,7 @@ const bcryptjs = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
 const { default: mongoose } = require("mongoose");
+const ws = require("ws");
 require("dotenv").config();
 
 const app = express();
@@ -85,7 +86,7 @@ app.get("/login", async (req, res) => {
     const { _id } = user;
     bcryptjs
       .compare(password, user.password)
-      .then((result) => {
+      .then(() => {
         jwt.sign({ _id, username }, jwtSecret, {}, (error, token) => {
           res
             .cookie("token", token, { sameSite: "none", secure: true })
@@ -132,6 +133,32 @@ app.post("/login", async (req, res) => {
   }
 });
 
-app.listen("4000", () => {
-  console.log("Server started...");
+const server = app.listen("4000");
+const wss = new ws.WebSocketServer({ server });
+
+wss.on("connection", (connection, req) => {
+  const token = parseCookies(req)["token"];
+  if (token) {
+    jwt.verify(token, jwtSecret, (err, user) => {
+      if(err) throw new Error(err);
+
+      connection.userId = user._id;
+      connection.username = user.username;
+    });
+  }
 });
+
+parseCookies = (request) => {
+  const cookies = {};
+  const cookiesString = request.headers?.cookie;
+  if (!cookiesString) {
+    return cookies;
+  }
+
+  const cookiesList = cookiesString.split(";");
+  cookiesList.forEach((cookieStr) => {
+    const cookieObject = cookieStr.split("=");
+    cookies[cookieObject[0]] = cookieObject[1];
+  });
+  return cookies;
+};
