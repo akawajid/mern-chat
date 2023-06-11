@@ -140,12 +140,18 @@ wss.on("connection", (connection, req) => {
   const token = parseCookies(req)["token"];
   if (token) {
     jwt.verify(token, jwtSecret, (err, user) => {
-      if(err) throw new Error(err);
+      if (err) throw new Error(err);
 
       connection.userId = user._id;
       connection.username = user.username;
     });
   }
+
+  const onlineUsers = {};
+  [...wss.clients].forEach(({ userId, username }) => {
+    connection.userId !== userId && (onlineUsers[userId] = username);
+  });
+  connection.send(JSON.stringify(onlineUsers));
 });
 
 parseCookies = (request) => {

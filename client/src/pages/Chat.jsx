@@ -1,21 +1,27 @@
 import { useEffect, useState } from "react";
 import { HelmetProvider, Helmet } from "react-helmet-async";
+import UserAvatar from "./../../components/UserAvatar";
 
 export default function Chat() {
-
   const [ws, setWS] = useState(null);
-  
+  const [onlineUsers, setOnlineUsers] = useState({});
+
   useEffect(() => {
-    const webSocket = new WebSocket('ws://localhost:4000');
+    const webSocket = new WebSocket("ws://localhost:4000");
     setWS(webSocket);
 
-    window.addEventListener('message', handleMessages);
-
+    webSocket.addEventListener("message", handleMessages);
   }, []);
 
   const handleMessages = (e) => {
-    console.log(e);
-  }
+    if (e.data instanceof Blob) {
+      e.data.text().then(() => {
+        // handle Blob
+      });
+    } else {
+      setOnlineUsers(JSON.parse(e.data));
+    }
+  };
 
   return (
     <HelmetProvider>
@@ -23,7 +29,19 @@ export default function Chat() {
         <title>Start Your Chat</title>
       </Helmet>
       <div className="flex w-full h-screen">
-        <div className="w-1/4 bg-slate-600"> Contacts </div>
+        <div className="w-1/4 bg-slate-600">
+          {Object.keys(onlineUsers).map((userId) => (
+            <div
+              key={userId}
+              className="m-5 mb-8 pb-2 cursor-pointer border-b-2 border-gray-400 text-xl text-white"
+            >
+              <div className="flex gap-2 items-center">
+                <UserAvatar userId={userId} username={onlineUsers[userId]} />
+                {onlineUsers[userId]}
+              </div>
+            </div>
+          ))}
+        </div>
         <div className="w-3/4 bg-blue-300 flex items-end">
           <div className="flex w-full items-center mx-3 mb-2">
             <input
