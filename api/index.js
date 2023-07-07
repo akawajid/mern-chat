@@ -78,28 +78,9 @@ app.get("/profile", (req, res) => {
   }
 });
 
-app.get("/login", async (req, res) => {
-  const password = "1234";
-  const user = await User.findOne({ username: "test1" });
-
-  if (user) {
-    const { _id } = user;
-    bcryptjs
-      .compare(password, user.password)
-      .then(() => {
-        jwt.sign({ _id, username }, jwtSecret, {}, (error, token) => {
-          res
-            .cookie("token", token, { sameSite: "none", secure: true })
-            .status("200")
-            .json({ _id, username });
-        });
-      })
-      .catch(() => {
-        res.status(401).json("Incorrect username or password");
-      });
-  } else {
-    res.status(401).json("Unauthorized");
-  }
+app.get("/logout", (req, res) => {
+  res.clearCookie("token");
+  res.end();
 });
 
 app.post("/login", async (req, res) => {
@@ -135,6 +116,7 @@ app.post("/login", async (req, res) => {
 
 const server = app.listen("4000");
 const wss = new ws.WebSocketServer({ server });
+const clientConnections = new Set();
 
 wss.on("connection", (connection, req) => {
   const token = parseCookies(req)["token"];
@@ -144,15 +126,45 @@ wss.on("connection", (connection, req) => {
 
       connection.userId = user._id;
       connection.username = user.username;
+      clientConnections.add(connection);
+      notifyNewOnlineUser(user.username);
     });
   }
+
+  connection.on("close", () => {
+    clientConnections.delete(connection);
+  });
 
   const onlineUsers = {};
   [...wss.clients].forEach(({ userId, username }) => {
     connection.userId !== userId && (onlineUsers[userId] = username);
   });
   connection.send(JSON.stringify(onlineUsers));
+
+  // temp to send active users to all clients
+  /* const onlineUsers = {};
+  [...wss.clients].forEach(
+    ({ userId, username }) => (onlineUsers[userId] = username)
+  );
+
+  connection.send(
+    JSON.stringify(
+      Object.fromEntries(
+        Object.entries(onlineUsers).filter(
+          ({ 0: userId }) => connection.userId !== userId
+        )
+      )
+    )
+  ); */
 });
+
+const notifyNewOnlineUser = (username) => {
+  const message = { type: 'New User', message: 'New user logged in', username }
+
+  clientConnections.forEach(
+    (client, _i) => client.username !== username && client.send(JSON.stringify(message))
+  );
+};
 
 parseCookies = (request) => {
   const cookies = {};

@@ -21,7 +21,16 @@ export default function Chat() {
         // handle Blob
       });
     } else {
-      setOnlineUsers(JSON.parse(e.data));
+      console.log(e.data);
+      const serverMessage = JSON.parse(e.data);
+      switch (serverMessage.type) {
+        case "New User":
+          console.log(serverMessage.message);
+          break;
+        default:
+          setOnlineUsers(JSON.parse(e.data));
+          break;
+      }
     }
   };
 

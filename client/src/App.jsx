@@ -7,6 +7,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Error404 from "./pages/Error404";
 import Chat from "./pages/Chat";
+import Logout from "./pages/Logout";
 
 function App() {
   axios.defaults.baseURL = import.meta.env.VITE_API_URL;
@@ -26,6 +27,7 @@ function App() {
           <Route path="/" element={<Login />} />
         )}
         <Route path="/login" element={<Login />} />
+        <Route path="/logout" element={<Logout />} />
         <Route path="/register" element={<Register />} />
         <Route path="*" element={<Error404 />} />
       </Routes>

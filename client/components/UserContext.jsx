@@ -16,8 +16,15 @@ export function UserContextProvider({ children }) {
     });
   }, []);
 
+  const logoutUser = () => {
+    axios.get("/logout").then(() => {
+      setUserProfile({});
+      window.location.href = '/';
+    });
+  }
+
   return (
-    <UserContext.Provider value={{ userProfile, setUserProfile }}>
+    <UserContext.Provider value={{ userProfile, setUserProfile, logoutUser }}>
       {children}
     </UserContext.Provider>
   );
